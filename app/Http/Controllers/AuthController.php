@@ -23,7 +23,7 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Strict Validation Rules for Registration (Kasama na ang Course at Block)
+        // Strict Validation Rules for Registration
         $request->validate([
             'student_id' => [
                 'required',
@@ -52,7 +52,6 @@ class AuthController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'g-recaptcha-response' => 'required|captcha',
         ], [
-            // Custom Error Messages
             'student_id.required' => 'Student ID is required.',
             'student_id.unique' => 'This Student ID is already registered.',
             'student_id.regex' => 'Student ID can only contain letters, numbers, and hyphens.',
@@ -127,12 +126,11 @@ class AuthController extends Controller
                 'last_login_at' => now(),
             ]);
 
-            // Send Email Security Alert Notification (Na-update para ilantad ang error kung sakali)
+            // Send Email Security Alert Notification (Clean try-catch)
             try {
                 $authUser->notify(new AccountUsedNotification());
             } catch (\Exception $e) {
-                // Ipakita ang eksaktong error message sa screen habang nagte-test
-                dd($e->getMessage());
+                // Silently handle if network fluctuates so login isn't blocked
             }
 
             return redirect()->intended('dashboard');
@@ -145,16 +143,13 @@ class AuthController extends Controller
 
     public function dashboard()
     {
-        // Kunin ang lahat ng rehistradong estudyante para makita ng Admin sa directory
         $students = User::where('role', 'student')->get();
         $users = User::all();
 
-        // Kung Admin, ibigay ang Admin View kasama ang listahan ng mga estudyante
         if (Auth::user()->role === 'admin') {
             return view('admin.dashboard', compact('users', 'students'));
         }
 
-        // Kung Student, ibigay ang Student View
         return view('dashboard');
     }
 
@@ -167,13 +162,11 @@ class AuthController extends Controller
         return redirect()->route('welcome')->with('success', 'Logged out successfully.');
     }
 
-    // Show Reset Password Form
     public function showResetPassword($token)
     {
         return view('auth.reset-password', ['token' => $token]);
     }
 
-    // Process Password Reset
     public function resetPassword(Request $request)
     {
         $request->validate([
@@ -199,7 +192,6 @@ class AuthController extends Controller
                     : back()->withErrors(['email' => __($status)]);
     }
 
-    // Forgot Password Methods
     public function showForgotPassword()
     {
         return view('auth.forgot-password');
