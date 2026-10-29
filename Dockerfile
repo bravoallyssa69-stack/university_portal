@@ -20,14 +20,11 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Itakda ang working directory
 WORKDIR /var/www/html
 
-# Kopyahin muna ang composer files para ma-cache ang dependencies
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Kopyahin ang buong project files
+# Kopyahin ang buong project files muna para naroon ang artisan at iba pang files
 COPY . .
 
-# I-build ang frontend assets kung kinakailangan
+# Patakbuhin ang composer install at npm build
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 RUN npm install && npm run build
 
 # I-set ang tamang permissions sa storage at bootstrap cache
