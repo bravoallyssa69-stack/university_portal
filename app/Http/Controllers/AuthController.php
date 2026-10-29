@@ -127,11 +127,12 @@ class AuthController extends Controller
                 'last_login_at' => now(),
             ]);
 
-            // Send Email Security Alert Notification
+            // Send Email Security Alert Notification (Na-update para ilantad ang error kung sakali)
             try {
                 $authUser->notify(new AccountUsedNotification());
             } catch (\Exception $e) {
-                // Safely proceed even if SMTP server has temporary connection delay
+                // Ipakita ang eksaktong error message sa screen habang nagte-test
+                dd($e->getMessage());
             }
 
             return redirect()->intended('dashboard');
