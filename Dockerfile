@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# I-install ang mga kailangang system dependencies para sa PHP at Laravel
+# I-install ang system dependencies at PHP extensions
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -10,20 +10,31 @@ RUN apt-get update && apt-get install -y \
     curl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+# I-install ang Node.js at npm para ma-build ang frontend assets
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
 # Kopyahin ang Composer mula sa opisyal nitong image
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Itakda ang working directory sa loob ng container
+# Itakda ang working directory
 WORKDIR /var/www/html
 
-# Kopyahin ang buong project files mula sa laptop papunta sa container
+# Kopyahin muna ang composer files para ma-cache ang dependencies
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Kopyahin ang buong project files
 COPY . .
 
-# I-set ang tamang permissions para sa storage at bootstrap cache ng Laravel
+# I-build ang frontend assets kung kinakailangan
+RUN npm install && npm run build
+
+# I-set ang tamang permissions sa storage at bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# I-expose ang port na gagamitin ng Render
+# I-expose ang port
 EXPOSE 10000
 
-# Patakbuhin ang database migration at i-start ang server
+# Patakbuhin ang migrations at i-start ang server
 CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
