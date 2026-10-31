@@ -1,37 +1,39 @@
 FROM php:8.2-apache
 
-# I-install ang system dependencies at PHP extensions
+# Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
     libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    zip \
+    unzip \
+    git \
     libonig-dev \
-    libxml2-dev \
-    curl \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
+    libxml2-dev
 
-# I-install ang Node.js at npm para ma-build ang frontend assets
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs
+RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
-# Kopyahin ang Composer mula sa opisyal nitong image
+# Get latest Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Itakda ang working directory
+# Set working directory
 WORKDIR /var/www/html
 
-# Kopyahin ang buong project files muna para naroon ang artisan at iba pang files
-COPY . .
+# Copy existing application directory contents
+COPY . /var/www/html
 
-# Patakbuhin ang composer install at npm build
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-RUN npm install && npm run build
+# Install composer dependencies
+RUN composer install --no-dev --optimize-autoloader
 
-# I-set ang tamang permissions sa storage at bootstrap cache
+# Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# I-expose ang port
-EXPOSE 10000
+# Clear and Cache configuration for production
+RUN php artisan config:clear
+RUN php artisan config:cache
+RUN php artisan route:cache
+RUN php artisan view:cache
 
-# Patakbuhin ang migrations at i-start ang server
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
+# Expose port 80 and start Apache
+EXPOSE 80
+CMD ["apache2-foreground"]
