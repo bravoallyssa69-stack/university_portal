@@ -121,11 +121,11 @@ class AuthController extends Controller
                 'last_login_at' => now(),
             ]);
 
-            // Debug Mail Error: Ipakita ang eksaktong mensahe sakaling magka-error sa SMTP
+            // Clean try-catch to prevent login blocking if mail fluctuates
             try {
                 $authUser->notify(new AccountUsedNotification());
             } catch (\Exception $e) {
-                dd($e->getMessage());
+                \Log::error('Mail sending failed: ' . $e->getMessage());
             }
 
             return redirect()->intended('dashboard');
