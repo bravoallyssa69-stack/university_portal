@@ -23,7 +23,6 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Strict Validation Rules for Registration
         $request->validate([
             'student_id' => [
                 'required',
@@ -92,7 +91,6 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        // Strict Validation Rules for Login
         $request->validate([
             'email' => [
                 'required',
@@ -106,7 +104,6 @@ class AuthController extends Controller
             'g-recaptcha-response.required' => 'Please complete the reCAPTCHA verification.',
         ]);
 
-        // Check if user exists in DB
         $user = User::where('email', $request->email)->first();
 
         if (!$user) {
@@ -115,22 +112,20 @@ class AuthController extends Controller
             ]);
         }
 
-        // Attempt Authentication
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $request->session()->regenerate();
 
             $authUser = Auth::user();
             
-            // Record Date & Time of Login (Real-Time)
             $authUser->update([
                 'last_login_at' => now(),
             ]);
 
-            // Send Email Security Alert Notification (Clean try-catch)
+            // Debug Mail Error: Ipakita ang eksaktong mensahe sakaling magka-error sa SMTP
             try {
                 $authUser->notify(new AccountUsedNotification());
             } catch (\Exception $e) {
-                // Silently handle if network fluctuates so login isn't blocked
+                dd($e->getMessage());
             }
 
             return redirect()->intended('dashboard');
