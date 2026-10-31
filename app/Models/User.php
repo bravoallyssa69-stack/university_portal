@@ -8,17 +8,18 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Auth\Notifications\ResetPassword as ResetPasswordNotification;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Auth\Passwords\CanResetPassword; // <--- KINAKAILANGAN: I-import ito
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, CanResetPassword; // <--- KINAKAILANGAN: Isali ito sa paggamit
 
     protected $fillable = [
         'student_id',
         'name',
         'email',
-        'course',  // <-- Bagong dagdag para ma-save ang course
-        'block',   // <-- Bagong dagdag para ma-save ang block
+        'course',
+        'block',
         'password',
         'role',
         'last_login_at',
