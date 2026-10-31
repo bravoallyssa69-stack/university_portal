@@ -28,12 +28,6 @@ RUN composer install --no-dev --optimize-autoloader
 # Set permissions for storage and bootstrap cache
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Clear and Cache configuration for production
-RUN php artisan config:clear
-RUN php artisan config:cache
-RUN php artisan route:cache
-RUN php artisan view:cache
-
 # Expose port 80 and start Apache
 EXPOSE 80
 CMD ["apache2-foreground"]
